@@ -1,13 +1,12 @@
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+from groq import Groq
 import os
 
 # Configure the API key from environment variable (for deployment)
-API_KEY = os.environ.get('GEMINI_API_KEY', 'YOUR_API_KEY_HERE')
-genai.configure(api_key=API_KEY)
+API_KEY = os.environ.get('GROQ_API_KEY', 'YOUR_GROQ_API_KEY_HERE')
 
-# Initialize the model
-model = genai.GenerativeModel('models/gemini-2.5-flash')
+# Initialize the Groq client
+client = Groq(api_key=API_KEY)
 
 # Create Flask app
 app = Flask(__name__)
@@ -39,9 +38,14 @@ def ask_question():
         question = data['question']
         print(f"\n[Question received]: {question}")
         
-        # Generate response from Gemini
-        response = model.generate_content(question)
-        answer = response.text
+        # Generate response from Groq
+        response = client.chat.completions.create(
+            messages=[
+                {"role": "user", "content": question}
+            ],
+            model="llama-3.1-70b-versatile",
+        )
+        answer = response.choices[0].message.content
         
         print(f"[Answer generated]: {answer[:100]}...")  # Print first 100 chars
         
